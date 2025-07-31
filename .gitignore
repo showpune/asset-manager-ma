@@ -36,3 +36,6 @@ build/
 /logs/
 .github/appmod-java*/*
 .a2a*/*
+
+# Keep modernization files
+!.modernization/
