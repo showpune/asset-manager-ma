@@ -34,7 +34,6 @@ build/
 .vscode/
 
 /logs/
-.github/appmod-java*/*
 .a2a*/*
 .claude/*
 .modkit/*
