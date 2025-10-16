@@ -1,8 +1,7 @@
 ﻿{
   "properties": {
-    "appName": "assets-manager-parent",
+    "appName": "assets-manager",
     "jdkVersion": "11",
-    "targets": ["azure-aks", "azure-appservice", "cloud-readiness"],
     "tools": ["Maven"],
     "frameworks": ["Spring", "Spring Boot"],
     "languages": ["Java"]
