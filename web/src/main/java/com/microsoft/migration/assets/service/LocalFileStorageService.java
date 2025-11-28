@@ -21,6 +21,12 @@ import java.util.stream.Collectors;
 
 import static com.microsoft.migration.assets.config.ServiceBusConfig.QUEUE_NAME;
 
+/**
+ * File storage service that uses mounted Azure Storage File Share.
+ * When deployed to Azure Container Apps, the storage directory should point to
+ * the Azure Storage File Share mount path (e.g., /mnt/azure-fileshare).
+ * This allows seamless file operations using Java NIO with Azure-backed storage.
+ */
 @Service
 @Profile("dev") // Only active when dev profile is active
 public class LocalFileStorageService implements StorageService {
@@ -29,7 +35,7 @@ public class LocalFileStorageService implements StorageService {
     
     private final JmsTemplate jmsTemplate;
     
-    @Value("${local.storage.directory:../storage}")
+    @Value("${azure.storage.fileshare.mount-path:${local.storage.directory:../storage}}")
     private String storageDirectory;
     
     private Path rootLocation;
@@ -41,12 +47,12 @@ public class LocalFileStorageService implements StorageService {
     @PostConstruct
     public void init() throws IOException {
         rootLocation = Paths.get(storageDirectory).toAbsolutePath().normalize();
-        logger.info("Local storage directory: {}", rootLocation);
+        logger.info("File storage directory (Azure File Share mount or local): {}", rootLocation);
         
         // Create directory if it doesn't exist
         if (!Files.exists(rootLocation)) {
             Files.createDirectories(rootLocation);
-            logger.info("Created local storage directory");
+            logger.info("Created storage directory");
         }
     }
 
@@ -139,7 +145,7 @@ public class LocalFileStorageService implements StorageService {
 
     @Override
     public String getStorageType() {
-        return "local";
+        return "azure-fileshare";
     }
     
     private String generateUrl(String key) {
