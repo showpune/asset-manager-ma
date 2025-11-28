@@ -6,30 +6,29 @@ import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Service
-@Profile("dev")
-public class LocalFileProcessingService extends AbstractFileProcessingService {
+@Profile("azure-files")
+public class AzureFilesProcessingService extends AbstractFileProcessingService {
     
-    private static final Logger logger = LoggerFactory.getLogger(LocalFileProcessingService.class);
+    private static final Logger logger = LoggerFactory.getLogger(AzureFilesProcessingService.class);
     
-    @Value("${local.storage.directory:../storage}")
+    @Value("${azure.storage.fileshare.mount-path:/mnt/storage}")
     private String storageDirectory;
     
     private Path rootLocation;
     
     @PostConstruct
     public void init() throws Exception {
-        rootLocation = Paths.get(storageDirectory).toAbsolutePath().normalize();
-        logger.info("Local storage directory: {}", rootLocation);
+        rootLocation = Path.of(storageDirectory).toAbsolutePath().normalize();
+        logger.info("Azure Storage File Share mount path: {}", rootLocation);
         
         if (!Files.exists(rootLocation)) {
             Files.createDirectories(rootLocation);
-            logger.info("Created local storage directory");
+            logger.info("Created storage directory on mounted Azure Storage File Share");
         }
     }
 
@@ -51,7 +50,7 @@ public class LocalFileProcessingService extends AbstractFileProcessingService {
 
     @Override
     public String getStorageType() {
-        return "local";
+        return "azure-files";
     }
 
     @Override
