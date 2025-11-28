@@ -27,7 +27,7 @@ import static com.microsoft.migration.assets.config.ServiceBusConfig.QUEUE_NAME;
 
 @Service
 @RequiredArgsConstructor
-@Profile("!dev") // Active when not in dev profile
+@Profile("azure-blob") // Active when azure-blob profile is enabled for Azure Blob Storage
 public class AzureBlobStorageService implements StorageService {
 
     private final BlobContainerClient blobContainerClient;

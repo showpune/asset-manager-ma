@@ -7,7 +7,7 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
-@ActiveProfiles("dev")
+@ActiveProfiles("azure-files")
 class AssetsManagerApplicationTests {
 
 	@MockBean

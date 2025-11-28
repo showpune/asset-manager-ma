@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 @Service
-@Profile("!dev")
+@Profile("azure-blob")
 @RequiredArgsConstructor
 public class AzureBlobFileProcessingService extends AbstractFileProcessingService {
     private final BlobContainerClient blobContainerClient;

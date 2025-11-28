@@ -24,31 +24,31 @@ import java.util.stream.Collectors;
 import static com.microsoft.migration.assets.config.ServiceBusConfig.QUEUE_NAME;
 
 @Service
-@Profile("dev") // Only active when dev profile is active
-public class LocalFileStorageService implements StorageService {
+@Profile("azure-files") // Active when azure-files profile is enabled for Azure Storage File Share mount
+public class AzureFilesStorageService implements StorageService {
 
-    private static final Logger logger = LoggerFactory.getLogger(LocalFileStorageService.class);
+    private static final Logger logger = LoggerFactory.getLogger(AzureFilesStorageService.class);
     
     private final JmsTemplate jmsTemplate;
     
-    @Value("${local.storage.directory:../storage}")
+    @Value("${azure.storage.fileshare.mount-path:/mnt/storage}")
     private String storageDirectory;
     
     private Path rootLocation;
 
-    public LocalFileStorageService(JmsTemplate jmsTemplate) {
+    public AzureFilesStorageService(JmsTemplate jmsTemplate) {
         this.jmsTemplate = jmsTemplate;
     }
     
     @PostConstruct
     public void init() throws IOException {
         rootLocation = Path.of(storageDirectory).toAbsolutePath().normalize();
-        logger.info("Local storage directory: {}", rootLocation);
+        logger.info("Azure Storage File Share mount path: {}", rootLocation);
         
         // Create directory if it doesn't exist
         if (!Files.exists(rootLocation)) {
             Files.createDirectories(rootLocation);
-            logger.info("Created local storage directory");
+            logger.info("Created storage directory on mounted Azure Storage File Share");
         }
     }
 
@@ -141,7 +141,7 @@ public class LocalFileStorageService implements StorageService {
 
     @Override
     public String getStorageType() {
-        return "local";
+        return "azure-files";
     }
     
     private String generateUrl(String key) {
