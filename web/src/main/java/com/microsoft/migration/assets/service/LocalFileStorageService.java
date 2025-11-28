@@ -1,17 +1,17 @@
 package com.microsoft.migration.assets.service;
 
 import com.microsoft.migration.assets.model.ImageProcessingMessage;
-import com.microsoft.migration.assets.model.S3StorageItem;
+import com.microsoft.migration.assets.model.BlobStorageItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -19,39 +19,45 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.microsoft.migration.assets.config.RabbitConfig.QUEUE_NAME;
+import static com.microsoft.migration.assets.config.ServiceBusConfig.QUEUE_NAME;
 
+/**
+ * File storage service that uses mounted Azure Storage File Share.
+ * When deployed to Azure Container Apps, the storage directory should point to
+ * the Azure Storage File Share mount path (e.g., /mnt/azure-fileshare).
+ * This allows seamless file operations using Java NIO with Azure-backed storage.
+ */
 @Service
 @Profile("dev") // Only active when dev profile is active
 public class LocalFileStorageService implements StorageService {
 
     private static final Logger logger = LoggerFactory.getLogger(LocalFileStorageService.class);
     
-    private final RabbitTemplate rabbitTemplate;
+    private final JmsTemplate jmsTemplate;
     
-    @Value("${local.storage.directory:../storage}")
+    @Value("${azure.storage.fileshare.mount-path:${local.storage.directory:../storage}}")
     private String storageDirectory;
     
     private Path rootLocation;
 
-    public LocalFileStorageService(RabbitTemplate rabbitTemplate) {
-        this.rabbitTemplate = rabbitTemplate;
+    public LocalFileStorageService(JmsTemplate jmsTemplate) {
+        this.jmsTemplate = jmsTemplate;
     }
     
     @PostConstruct
     public void init() throws IOException {
         rootLocation = Paths.get(storageDirectory).toAbsolutePath().normalize();
-        logger.info("Local storage directory: {}", rootLocation);
+        logger.info("File storage directory (Azure File Share mount or local): {}", rootLocation);
         
         // Create directory if it doesn't exist
         if (!Files.exists(rootLocation)) {
             Files.createDirectories(rootLocation);
-            logger.info("Created local storage directory");
+            logger.info("Created storage directory");
         }
     }
 
     @Override
-    public List<S3StorageItem> listObjects() {
+    public List<BlobStorageItem> listObjects() {
         try {
             return Files.walk(rootLocation, 1)
                 .filter(path -> !path.equals(rootLocation))
@@ -59,7 +65,7 @@ public class LocalFileStorageService implements StorageService {
                     try {
                         String filename = path.getFileName().toString();
                         BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
-                        return new S3StorageItem(
+                        return new BlobStorageItem(
                             filename,
                             filename,
                             Files.size(path),
@@ -72,7 +78,7 @@ public class LocalFileStorageService implements StorageService {
                         return null;
                     }
                 })
-                .filter(s3StorageItem -> s3StorageItem != null)
+                .filter(blobStorageItem -> blobStorageItem != null)
                 .collect(Collectors.toList());
         } catch (IOException e) {
             logger.error("Failed to list files", e);
@@ -102,7 +108,7 @@ public class LocalFileStorageService implements StorageService {
             getStorageType(),
             file.getSize()
         );
-        rabbitTemplate.convertAndSend(QUEUE_NAME, message);
+        jmsTemplate.convertAndSend(QUEUE_NAME, message);
     }
 
     @Override
@@ -139,7 +145,7 @@ public class LocalFileStorageService implements StorageService {
 
     @Override
     public String getStorageType() {
-        return "local";
+        return "azure-fileshare";
     }
     
     private String generateUrl(String key) {

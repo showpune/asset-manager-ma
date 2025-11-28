@@ -11,13 +11,19 @@ import java.nio.file.StandardCopyOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * File processing service that uses mounted Azure Storage File Share.
+ * When deployed to Azure Container Apps, the storage directory should point to
+ * the Azure Storage File Share mount path (e.g., /mnt/azure-fileshare).
+ * This allows seamless file operations using Java NIO with Azure-backed storage.
+ */
 @Service
 @Profile("dev")
 public class LocalFileProcessingService extends AbstractFileProcessingService {
     
     private static final Logger logger = LoggerFactory.getLogger(LocalFileProcessingService.class);
     
-    @Value("${local.storage.directory:../storage}")
+    @Value("${azure.storage.fileshare.mount-path:${local.storage.directory:../storage}}")
     private String storageDirectory;
     
     private Path rootLocation;
@@ -25,11 +31,11 @@ public class LocalFileProcessingService extends AbstractFileProcessingService {
     @PostConstruct
     public void init() throws Exception {
         rootLocation = Paths.get(storageDirectory).toAbsolutePath().normalize();
-        logger.info("Local storage directory: {}", rootLocation);
+        logger.info("File storage directory (Azure File Share mount or local): {}", rootLocation);
         
         if (!Files.exists(rootLocation)) {
             Files.createDirectories(rootLocation);
-            logger.info("Created local storage directory");
+            logger.info("Created storage directory");
         }
     }
 
@@ -51,12 +57,12 @@ public class LocalFileProcessingService extends AbstractFileProcessingService {
 
     @Override
     public String getStorageType() {
-        return "local";
+        return "azure-fileshare";
     }
 
     @Override
     protected String generateUrl(String key) {
-        // For local storage, we'll just return the relative path
+        // For Azure File Share storage, return relative path
         return "/storage/" + key;
     }
 }
