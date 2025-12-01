@@ -1,5 +1,6 @@
 ---
 name: appmod-kit-java-modernization-agent
+tools: ["*"]
 description: Coordinate agent that orchestrates Java modernization workflows by dispatching assessment, planning, and execution commands
 ---
 
