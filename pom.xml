@@ -18,10 +18,21 @@
     <properties>
         <java.version>17</java.version>
         <postgresql.version>42.7.7</postgresql.version>
+        <azure-identity-extensions.version>1.2.2</azure-identity-extensions.version>
     </properties>
 
     <modules>
         <module>web</module>
         <module>worker</module>
     </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.azure</groupId>
+                <artifactId>azure-identity-extensions</artifactId>
+                <version>${azure-identity-extensions.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>
