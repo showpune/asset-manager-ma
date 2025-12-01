@@ -1,6 +1,6 @@
 # Modernization Plan
 
-**Branch**: `002-generate-modernization-plan` | **Date**: 2025-12-01 | **Github Issue**: N/A
+**Branch**: `002-generate-modernization-plan` | **Date**: 2025-12-01 | **GitHub Issue**: N/A
 
 ---
 
